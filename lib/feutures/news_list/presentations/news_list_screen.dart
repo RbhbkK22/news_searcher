@@ -31,7 +31,9 @@ class _NewsListScreenState extends State<NewsListScreen> {
         ),
       );
     } else {
-      _scrollController.jumpTo(0);
+      if (_scrollController.positions.isNotEmpty) {
+        _scrollController.jumpTo(0);
+      }
       _bloc.search(query);
     }
   }
@@ -84,11 +86,11 @@ class _NewsListScreenState extends State<NewsListScreen> {
             // кнопка фильтров
             FilterButtonWidget(onPressed: searchWithParams),
             //список новостей
-            StreamBuilder<List<NewsModel>>(
-              stream: _bloc.newsStream,
+            StreamBuilder<Map<String, List<NewsModel>>>(
+              stream: _bloc.groupedNewsStream,
               builder: (context, snapshot) {
                 return NewsListViewWidget(
-                  newsList: snapshot.data ?? [],
+                  groupedNews: snapshot.data ?? {},
                   isLoading: _bloc.isLoading,
                   hasMore: _bloc.hasMore,
                   isFirstSearch: _bloc.isFirstSearch,

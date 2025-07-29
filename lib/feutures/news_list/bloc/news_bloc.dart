@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:intl/intl.dart';
 import 'package:news_app/feutures/news_list/data/models/news_model.dart';
 import 'package:news_app/feutures/news_list/data/service/news_service.dart';
 import 'package:rxdart/rxdart.dart';
@@ -7,7 +8,25 @@ class NewsBloc {
   final NewsService _newsService;
 
   final _newsSubject = BehaviorSubject<List<NewsModel>>.seeded([]);
-  Stream<List<NewsModel>> get newsStream => _newsSubject.stream;
+  Stream<Map<String, List<NewsModel>>> get groupedNewsStream =>
+      _newsSubject.stream.map((newsList) {
+        final Map<String, List<NewsModel>> grouped = {};
+
+        for (var news in newsList) {
+          final dateKey = DateFormat("yyyy-MM-dd").format(news.publishedAt);
+          grouped.putIfAbsent(dateKey, () => []).add(news);
+        }
+
+        final sortedKeys = grouped.keys.toList()
+          ..sort((a, b) => b.compareTo(a));
+
+        final sortedGrouped = <String, List<NewsModel>>{};
+        for (var key in sortedKeys) {
+          sortedGrouped[key] = grouped[key]!;
+        }
+
+        return sortedGrouped;
+      });
 
   StreamSubscription<List<NewsModel>>? _currentSearchSubscription;
   StreamSubscription<List<NewsModel>>? _loadMoreSubscription;
@@ -48,9 +67,7 @@ class NewsBloc {
     _isFirstSearch = false;
     _currentSearchSubscription = newsStream.listen(
       (newsList) {
-        final sorted = [...newsList]
-          ..sort((a, b) => b.publishedAt.compareTo(a.publishedAt));
-        _newsSubject.add(sorted);
+        _newsSubject.add(newsList);
         _isLoading = false;
       },
       onError: (e) {
@@ -61,27 +78,35 @@ class NewsBloc {
 
   void loadMore() {
     if (_isLoading || !_hasMore || _currentPage >= _maxPage) {
-      _hasMore = false;
       return;
     }
+
+    _isLoading = true;
     _currentPage++;
+
     final moreNewsStream = _newsService.fetchNews(
       query: _currentQuery,
       params: _params,
       page: _currentPage,
       pageSize: _pageSize,
     );
+
     final currentNews = _newsSubject.value;
     _loadMoreSubscription?.cancel();
 
     _loadMoreSubscription = moreNewsStream.listen(
       (newsList) {
-        final updateList = [...currentNews, ...newsList]
-          ..sort((a, b) => b.publishedAt.compareTo(a.publishedAt));
+        final updateList = [...currentNews, ...newsList];
         _newsSubject.add(updateList);
+
+        _isLoading = false;
+        if (newsList.length < _pageSize || _currentPage >= _maxPage) {
+          _hasMore = false;
+        }
       },
       onError: (e) {
         _newsSubject.addError(e);
+        _isLoading = false;
       },
     );
   }

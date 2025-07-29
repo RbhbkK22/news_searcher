@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:news_app/feutures/news_list/data/models/news_model.dart';
 import 'package:news_app/feutures/news_list/widgets/news_list_tile.dart';
 
 class NewsListViewWidget extends StatelessWidget {
-  final List<NewsModel> newsList;
+  final Map<String, List<NewsModel>> groupedNews;
   final bool isLoading;
   final bool hasMore;
   final bool isFirstSearch;
@@ -12,29 +11,15 @@ class NewsListViewWidget extends StatelessWidget {
 
   const NewsListViewWidget({
     super.key,
-    required this.newsList,
+    required this.groupedNews,
     required this.isLoading,
     required this.hasMore,
     required this.isFirstSearch,
     required this.scrollController,
   });
-
-  Map<String, List<NewsModel>> groupNews() {
-    final Map<String, List<NewsModel>> gruoped = {};
-
-    for (var news in newsList) {
-      final dateKey = DateFormat("yyyy-MM-dd").format(news.publishedAt);
-
-      gruoped.putIfAbsent(dateKey, () => []).add(news);
-    }
-    return gruoped;
-  }
-
+  
   @override
   Widget build(BuildContext context) {
-    if (newsList.isEmpty && isLoading) {
-      return const CircularProgressIndicator();
-    }
     if (isFirstSearch) {
       return Column(
         children: [
@@ -47,26 +32,25 @@ class NewsListViewWidget extends StatelessWidget {
         ],
       );
     }
-    if (newsList.isEmpty) {
+    if (isLoading) {
+      return const CircularProgressIndicator();
+    }
+    if (groupedNews.isEmpty) {
       return const Text('Новостей не найдено', maxLines: 2);
     }
-
-    final gropedNews = groupNews();
-    final sortedDates = gropedNews.keys.toList()
-      ..sort((a, b) => b.compareTo(a));
-
+    final dates = groupedNews.keys.toList();
     return Expanded(
       child: ListView.builder(
         padding: EdgeInsets.zero,
         controller: scrollController,
-        itemCount: hasMore ? sortedDates.length + 1 : sortedDates.length,
+        itemCount: hasMore ? dates.length + 1 : dates.length,
         itemBuilder: (context, index) {
-          if (index == sortedDates.length) {
+          if (index == groupedNews.length) {
             return Center(child: CircularProgressIndicator());
           }
 
-          final date = sortedDates[index];
-          final newsForDate = gropedNews[date]!;
+          final date = dates[index];
+          final newsForDate = groupedNews[date]!;
 
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
