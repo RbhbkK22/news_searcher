@@ -14,8 +14,8 @@ class NewsListTile extends StatefulWidget {
 
 class _NewsListTileState extends State<NewsListTile> {
   bool _imageLoaded = true;
+  
   Future<void> openUrl() async {
-    print(widget.newsModel.urlToImage);
     final uri = Uri.parse(widget.newsModel.url);
 
     if (await canLaunchUrl(uri)) {
@@ -57,31 +57,31 @@ class _NewsListTileState extends State<NewsListTile> {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (hasImage)
-              ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: CachedNetworkImage(
-                  imageUrl: widget.newsModel.urlToImage,
-
-                  height: _imageLoaded ? 80 : 0,
-                  width: _imageLoaded ? 80 : 0,
-                  fit: BoxFit.cover,
-                  placeholder: (context, url) =>
-                      Center(child: CircularProgressIndicator.adaptive()),
-                  errorWidget: (context, url, error) {
-                    WidgetsBinding.instance.addPostFrameCallback((_) {
-                      if (mounted) {
-                        setState(() {
-                          _imageLoaded = false;
+            hasImage && _imageLoaded
+                ? ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: CachedNetworkImage(
+                      imageUrl: widget.newsModel.urlToImage,
+                      height: 80,
+                      width: 80,
+                      fit: BoxFit.cover,
+                      placeholder: (context, url) =>
+                          Center(child: CircularProgressIndicator.adaptive()),
+                      errorWidget: (context, url, error) {
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          if (mounted) {
+                            setState(() {
+                              _imageLoaded = false;
+                            });
+                          }
                         });
-                      }
-                    });
 
-                    return SizedBox.shrink();
-                  },
-                ),
-              ),
-            if (hasImage && _imageLoaded) const SizedBox(width: 12),
+                        return SizedBox.shrink();
+                      },
+                    ),
+                  )
+                : SizedBox(width: 80, height: 80),
+            const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
