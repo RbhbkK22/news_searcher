@@ -36,10 +36,19 @@ class NewsListViewWidget extends StatelessWidget {
       return const CircularProgressIndicator();
     }
     if (isFirstSearch) {
-      return SizedBox.shrink();
+      return Column(
+        children: [
+          SizedBox(height: 34),
+          Text(
+            'Введите ключевое слово и фильтры для поиска новостей',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 16),
+          ),
+        ],
+      );
     }
     if (newsList.isEmpty) {
-      return const Text('Новостей не найдено');
+      return const Text('Новостей не найдено', maxLines: 2);
     }
 
     final gropedNews = groupNews();

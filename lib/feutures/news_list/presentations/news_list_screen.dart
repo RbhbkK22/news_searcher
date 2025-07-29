@@ -26,7 +26,9 @@ class _NewsListScreenState extends State<NewsListScreen> {
     final query = _searchController.text;
     if (query.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Введите ключевое слово для поиска новости')),
+        SnackBar(
+          content: Text('Вы не ввели ключевое слово для поиска новостей'),
+        ),
       );
     } else {
       _bloc.search(query);
