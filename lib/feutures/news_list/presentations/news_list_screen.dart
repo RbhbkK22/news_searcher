@@ -31,6 +31,7 @@ class _NewsListScreenState extends State<NewsListScreen> {
         ),
       );
     } else {
+      _scrollController.jumpTo(0);
       _bloc.search(query);
     }
   }

@@ -7,30 +7,29 @@ class NewsService {
 
   NewsService() : dioClient = DioClient(baseUrl: 'https://newsapi.org/v2');
 
-  Future<List<NewsModel>> fetchNews({
+  Stream<List<NewsModel>> fetchNews({
     required String query,
     required Map<String, dynamic> params,
     int page = 1,
     int pageSize = 25,
-  }) async {
-    try {
-      final response = await dioClient.get(
-        '/everything',
-        queryParameters: {
-          'q': query,
-          ...params,
-          'pageSize': pageSize,
-          'page': page,
-          'sortBy': 'publishedAt',
-          'apiKey': config.apiKey,
-        },
-      );
-
-      final data = response.data['articles'] as List;
-      final articles = data.map((data) => NewsModel.fromJson(data)).toList();
-      return articles;
-    } catch (e) {
-      throw Exception(e);
-    }
+  }) {
+    return Stream.fromFuture(
+      dioClient
+          .get(
+            '/everything',
+            queryParameters: {
+              'q': query,
+              ...params,
+              'pageSize': pageSize,
+              'page': page,
+              'sortBy': 'publishedAt',
+              'apiKey': config.apiKey,
+            },
+          )
+          .then((response) {
+            final data = response.data['articles'] as List;
+            return data.map((json) => NewsModel.fromJson(json)).toList();
+          }),
+    );
   }
 }
